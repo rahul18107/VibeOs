@@ -1,7 +1,8 @@
+import json
 import httpx
 from app.utils.config import CF_API_TOKEN, CF_BASE_URL
 
-async def generate(prompt: str, system: str = "", model: str = "@cf/meta/llama-3.1-8b-instruct-fast") -> str:
+async def generate(prompt: str, system: str = "", model: str = "@cf/meta/llama-3.1-8b-instruct-fast", max_tokens: int = 4096) -> str:
     
     headers = {
         "Authorization": f"Bearer {CF_API_TOKEN}",
@@ -22,7 +23,8 @@ async def generate(prompt: str, system: str = "", model: str = "@cf/meta/llama-3
     })
 
     payload = {
-        "messages": messages
+        "messages": messages,
+        "max_tokens": max_tokens
     }
 
     url = f"{CF_BASE_URL}/{model}"
@@ -31,4 +33,26 @@ async def generate(prompt: str, system: str = "", model: str = "@cf/meta/llama-3
         response = await client.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
-        return data["result"]["response"]
+        result = data["result"]["response"]
+        if not isinstance(result, str):
+            result = json.dumps(result)
+        return result
+
+
+async def generate_json(prompt: str, system: str = "", attempts: int = 3, **kwargs):
+    last_error = None
+
+    for _ in range(attempts):
+        response = await generate(prompt=prompt, system=system, **kwargs)
+
+        cleaned = response.strip()
+        if cleaned.startswith("```"):
+            lines = [l for l in cleaned.split("\n") if not l.startswith("```")]
+            cleaned = "\n".join(lines)
+
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError as e:
+            last_error = e
+
+    raise last_error

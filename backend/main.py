@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.providers.cloudflare import generate
 
+from app.agents.ui_agent import run as ui_agent_run
 from app.utils.config import APP_ENV
 
 @asynccontextmanager
@@ -33,6 +33,18 @@ async def health():
         "app": "VibeOS",
         "env": APP_ENV
     }
+
+
+
+@app.get("/test-ui-agent")
+async def test_ui_agent():
+    task = {
+        "task": "create App.jsx",
+        "type": "create_file",
+        "description": "Main calculator component with buttons and display"
+    }
+    result = await ui_agent_run(task, "Calculator")
+    return result
 
 
 

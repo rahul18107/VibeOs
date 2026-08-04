@@ -10,7 +10,7 @@ def get_project_path(project_name: str) -> Path:
 def create_project_folder(project_name: str) -> Path:
     project_path = get_project_path(project_name)
     project_path.mkdir(parents=True, exist_ok=True)
-    return project_path
+    return project_path 
 
 def create_file(project_name: str, file_path: str, content: str) -> str:
     full_path = get_project_path(project_name) / file_path
