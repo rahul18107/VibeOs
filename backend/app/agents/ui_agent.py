@@ -61,14 +61,27 @@ content:
 </div>
 
 styles:
-.display { text-align: right; padding: 12px 4px 20px; }
+.display { text-align: right; padding: 12px 4px 24px; }
 .display-expression { font-size: 14px; color: var(--text-secondary); min-height: 20px; }
-.display-current { font-size: 48px; font-weight: 300; color: var(--text); line-height: 1; }
-.buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.btn { padding: 18px; border-radius: 50%; border: none; cursor: pointer; font-size: 20px; font-family: var(--font); transition: all 0.15s ease; }
-.btn:active { transform: scale(0.95); }
-.btn-secondary { background: var(--surface); color: var(--text); }
+.display-current { font-size: 56px; font-weight: 200; color: var(--text); line-height: 1; }
+.buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 8px; }
+.btn { 
+  aspect-ratio: 1; 
+  border-radius: 50%; 
+  border: none; 
+  cursor: pointer; 
+  font-size: 20px; 
+  font-family: var(--font); 
+  transition: all 0.15s ease;
+  width: 100%;
+}
+.btn:active { transform: scale(0.92); opacity: 0.8; }
+.btn-secondary { background: #e0e0e5; color: var(--text); }
+.btn-secondary:hover { background: #d0d0d5; }
+.btn-dark { background: #888; color: white; }
+.btn-dark:hover { background: #777; }
 .btn-accent { background: var(--accent); color: white; }
+.btn-accent:hover { background: var(--accent-hover); }
 
 script:
 let current = '0'; let expression = ''; let shouldReset = false;
@@ -101,6 +114,8 @@ MACOS_WINDOW_TEMPLATE = """<!DOCTYPE html>
       :root {{
         --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         --accent: #007aff;
+        --accent-hover: #0066d6;
+        --bg: #ffffff;
         --surface: #f2f2f7;
         --border: #d1d1d6;
         --text: #1d1d1f;
@@ -119,13 +134,20 @@ MACOS_WINDOW_TEMPLATE = """<!DOCTYPE html>
         min-height: 100vh;
       }}
       .window {{
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-        width: 380px;
+        background: var(--bg);
+        border-radius: 12px;
+        box-shadow:
+            0 0 0 0.5px rgba(0,0,0,0.12),
+            0 20px 60px rgba(0,0,0,0.25),
+            0 8px 20px rgba(0,0,0,0.1);
+        width: fit-content;
+        min-width: 320px;
+        max-width: 600px;
+        min-height: 360px;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
-      }}
+        }}
       .titlebar {{
         display: flex;
         align-items: center;
