@@ -1,9 +1,17 @@
+import asyncio
+import sys
+
+# Windows subprocesses (npm install, npm run dev) require the Proactor loop;
+# the Selector loop raises a bare NotImplementedError.
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-
 from app.agents.ui_agent import run as ui_agent_run
 from app.utils.config import APP_ENV
+from app.agents.orchestrator import run as orchestrator_run
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,5 +54,14 @@ async def test_ui_agent():
     result = await ui_agent_run(task, "Calculator")
     return result
 
+
+
+@app.post("/test-orchestrator")
+async def test_orchestrator():
+    result = await orchestrator_run(
+        user_prompt="build me a simple calculator app",
+        project_name="Calculator"
+    )
+    return result
 
 

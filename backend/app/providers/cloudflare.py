@@ -1,4 +1,5 @@
 import json
+import re
 import httpx
 from app.utils.config import CF_API_TOKEN, CF_BASE_URL
 
@@ -39,20 +40,42 @@ async def generate(prompt: str, system: str = "", model: str = "@cf/meta/llama-3
         return result
 
 
+def _strip_fences(text: str) -> str:
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        lines = [l for l in cleaned.split("\n") if not l.startswith("```")]
+        cleaned = "\n".join(lines)
+    return cleaned
+
+
+def _repair_json(text: str) -> str:
+    """Last-resort fixes for the two malformed escapes this model emits.
+
+    Only ever applied after json.loads has already failed, so a no-op repair
+    costs nothing and a wrong repair cannot corrupt an otherwise-valid parse.
+    """
+    # backslash before a real line break (JS line-continuation) is illegal in JSON
+    repaired = re.sub(r"\\\s*\n\s*", " ", text)
+    # \' is a valid JS escape but not a valid JSON one
+    repaired = repaired.replace("\\'", "'")
+    return repaired
+
+
 async def generate_json(prompt: str, system: str = "", attempts: int = 3, **kwargs):
     last_error = None
 
     for _ in range(attempts):
         response = await generate(prompt=prompt, system=system, **kwargs)
-
-        cleaned = response.strip()
-        if cleaned.startswith("```"):
-            lines = [l for l in cleaned.split("\n") if not l.startswith("```")]
-            cleaned = "\n".join(lines)
+        cleaned = _strip_fences(response)
 
         try:
             return json.loads(cleaned)
         except json.JSONDecodeError as e:
             last_error = e
+
+        try:
+            return json.loads(_repair_json(cleaned))
+        except json.JSONDecodeError:
+            pass
 
     raise last_error
